@@ -3,7 +3,11 @@ using namespace std;
 
 typedef long long int lint;
 
-#define D(x) { cout << "[ " << #x << " : " << x << " ]" << endl;}
+#ifdef LOCAL
+#define D(x) printf( #x ": ", x)
+#else
+#define D(x) 
+#endif
 
 int main(int argc, char ** argv) {
 	
@@ -18,3 +22,12 @@ int main(int argc, char ** argv) {
 	}
 	
 }
+
+
+/**
+
+g++ -Wall -o "%e" "%f"
+
+bash.exe -c "build C:\work\cp\cf\practise\732B sol.cpp sol"
+
+ */

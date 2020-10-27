@@ -3,8 +3,8 @@ using namespace std;
 
 typedef long long int lint;
 
-#ifndef ONLINE_JUDGE
-#define D(x) { cout << "[ " << #x << " : " << x << " ]" << endl; }
+#ifdef LOCAL
+#define D(x) printf( #x ": ", x)
 #else
 #define D(x) 
 #endif
