@@ -19,14 +19,27 @@ void solve() {
 	for(int i=0; i<n; i++) {
 		char *p1 = a[i], *p2;
 		while(*p1) {
+			
+			/* move to the start point */
 			while(*p1 && *p1 != '.')
 				p1++;
+			if(!*p1) break;
+			
+			/* find the end point */
 			p2 = p1;
 			while(*p2 && *p2 == '.')
 				p2++;
-			int s1 = ((p2 - p1) / 2) * y + ((p2 - p1) / 2) * x;
-			int s2 = ((p2 - p1) * x);
-			ans += min(s1, s2);
+			
+			if(p1 != p2) {
+				if(p2 - p1 < 2) {
+					ans += x;
+				} else {
+					int s1 = ((p2 - p1) / 2) * y + ((p2 - p1) % 2) * x;
+					int s2 = ((p2 - p1) * x);
+					ans += min(s1, s2);
+				}
+			}
+			
 			p1 = p2;
 		}
 	}

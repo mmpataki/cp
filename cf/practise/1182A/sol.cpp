@@ -11,23 +11,12 @@ typedef long long int lint;
 
 int main(int argc, char ** argv) {
 	
-	ios_base::sync_with_stdio(0);
-	cin.tie(0);
-	
 	int t;
 	cin >> t;
 	
-	while(t--) {
-		
+	if(t % 2) {
+		cout << "0\n";
+	} else {
+		cout << (1 << (t/2)) << endl;
 	}
-	
 }
-
-
-/**
-
-g++ -Wall -o "%e" "%f"
-
-bash.exe -c "build C:\work\cp\cf\practise\732B sol.cpp sol"
-
- */

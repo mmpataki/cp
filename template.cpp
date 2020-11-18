@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-typedef long long int lint;
+typedef long long int ll;
 
 #ifdef DEBUG
 #define X(x) { cout << "[ " << #x << " : " << x << " ]" << endl;}
