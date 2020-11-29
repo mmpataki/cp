@@ -1,0 +1,101 @@
+{
+    /*
+    "workbench.colorCustomizations": {
+        "editor.foreground": "#000",
+        "tab.activeBackground": "#ff0000",
+        "editorLineNumber.foreground": "#000",
+        "editorLineNumber.activeForeground": "#ff0000",
+        "editorGutter.background": "#c8d4cd",
+        "terminal.background": "#fff",
+        "terminal.foreground": "#0f0f0f"
+    },
+    "editor.tokenColorCustomizations": {
+        "textMateRules": [
+            {
+                "scope": "keyword.operator",
+                "settings": {
+                    "foreground": "#000000"
+                }
+            },
+            {
+                "scope": "storage.type",
+                "settings": {
+                    "foreground": "#0000a0",
+                    "fontStyle": "bold"
+                }
+            },
+            {
+                "scope": "comment",
+                "settings": {
+                    "foreground": "#d00000"
+                }
+            },
+            {
+                "scope": "keyword.control",
+                "settings": {
+                    "foreground": "#00007f",
+                    "fontStyle": "bold"
+                }
+            },
+            {
+                "scope": "constant.numeric",
+                "settings": {
+                    "foreground": "#007f00"
+                }
+            },
+            {
+                "scope": "entity.name.type",
+                "settings": {
+                    "foreground": "#0000d0"
+                }
+            },
+            {
+                "scope": "entity.name.function",
+                "settings": {
+                    "foreground": "#000080"
+                }
+            },
+            {
+                "scope": "constant.character",
+                "settings": {
+                    "foreground": "#ff8000"
+                }
+            },
+            {
+                "scope": "string.quoted",
+                "settings": {
+                    "foreground": "#ff8000"
+                }
+            }
+        ],
+    },
+    "editor.semanticTokenColorCustomizations": {
+        "rules": {
+            "macro": {
+                "foreground": "#007f7f",
+                "fontStyle": ""
+            },
+            "function": {
+                "foreground": "#000080"
+            },
+            "label": "#000",
+            "operator": "#301010",
+            "variable": "#000",
+            "type": "#0000d0"
+        }
+    },
+    */
+    "editor.glyphMargin": false,
+    "editor.fontSize": 21,
+    "editor.fontFamily": "DejaVu Sans Mono",
+    "editor.fontWeight": "500",
+    "files.associations": {
+        "iostream": "cpp"
+    },
+    "workbench.tree.indent": 25,
+    "editor.minimap.enabled": false,
+    "window.zoomLevel": 0,
+    "terminal.integrated.fontSize": 16,
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true
+}

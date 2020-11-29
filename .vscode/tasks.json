@@ -1,0 +1,99 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "cp_test",
+            "command": "python2",
+            "args": [
+                "${workspaceFolder}/bin/cphelper.py",
+                "test",
+                "${fileDirname}",
+                "${fileBasename}",
+                "test"
+            ],
+            "presentation": {
+                "echo": false,
+                "showReuseMessage": false,
+            }
+        },
+        {
+            "type": "shell",
+            "label": "cp_prod",
+            "command": "python2",
+            "args": [
+                "${workspaceFolder}/bin/cphelper.py",
+                "test",
+                "${fileDirname}",
+                "${fileBasename}",
+                "prod"
+            ],
+            "presentation": {
+                "echo": false,
+                "showReuseMessage": false,
+            }
+        },
+        {
+            "type": "shell",
+            "label": "cp_custom",
+            "command": "python2",
+            "args": [
+                "${workspaceFolder}/bin/cphelper.py",
+                "test",
+                "${fileDirname}",
+                "${fileBasename}",
+                "custom"
+            ],
+            "presentation": {
+                "echo": false,
+                "showReuseMessage": false,
+            }
+        },
+        {
+            "type": "shell",
+            "label": "cp_setup",
+            "command": "python2",
+            "args": [
+                "${workspaceFolder}/bin/cphelper.py",
+                "setup",
+                "${workspaceFolder}",
+                "${input:platform}",
+                "${input:contestid}",
+                "/root/cred"
+            ],
+            "presentation": {
+                "echo": false,
+                "showReuseMessage": false,
+            }
+        },
+        {
+            "type": "shell",
+            "label": "opcp",
+            "command": "${workspaceFolder}/bin/opcp.sh",
+            "args": [
+                "${workspaceFolder}",
+                "${input:contestid}"
+            ],
+            "presentation": {
+                "echo": false,
+                "showReuseMessage": false,
+            }
+        },
+    ],
+    "inputs": [
+        {
+            "id": "contestid",
+            "type": "promptString",
+            "description": "contestid (eg. 1445)"
+        },
+        {
+            "id": "platform",
+            "type": "pickString",
+            "options": [
+                "cf",
+                "ac"
+            ],
+            "description": "Judging platform (cf: codeforces, ac: atcoder)"
+        }
+    ]
+}
