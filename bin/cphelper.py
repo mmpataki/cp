@@ -8,7 +8,7 @@ import requests
 from subprocess import check_output
 from bs4 import BeautifulSoup
 from itertools import izip_longest
-from time import time
+import time
 
 class Problem():
 	def __init__(self, id, name, time=0, memory=0):
@@ -27,7 +27,9 @@ class Problem():
 		except: return
 
 		# copy the template
-		shutil.copyfile(baseDir + "/../../template.cpp", ppath + "/" + self.id +".cpp")
+		solfile=ppath + "/" + self.id +".cpp"
+		shutil.copyfile(baseDir + "/../../template.cpp", solfile)
+		subprocess.call(["code", solfile])
 
 		# copy the input and output files
 		i = 0
@@ -63,8 +65,14 @@ class Contest():
 class CFParser():
 	def parse(self, contest_id, creds_file):
 		url="https://codeforces.com/contest/{}/problems".format(contest_id)
+		info("using url: " + url)
 		page=urllib2.urlopen(url)
 		soup=BeautifulSoup(page, features="html.parser")
+		#check for a countdown
+		cntdown=soup.find_all('div', attrs={'class': 'countdown'})
+		if len(cntdown) != 0:
+			t=str(cntdown[0].string).split(":")
+			time.sleep(int(t[0]) * 60 * 60 + int(t[1]) * 60 + int(t[2]))
 		contest = Contest(contest_id, soup.find_all('div', attrs={'class': 'caption'})[0].string)
 		for prob in soup.find_all('div', attrs = {'class': 'problemindexholder'}):
 			problem = Problem(prob.get('problemindex'), prob.find_all('div', attrs={'class': 'title'})[0].string)
@@ -137,10 +145,24 @@ parsers={
 }
 
 class ContestParser():
+	# root_folder platform contestid
 	def parse(self, args):
-		ctst = parsers[args[1]].parse(args[2], args[3])
-		ctst.setup(args[0] + "/" + args[1])
-		return self
+		# check if we have this contest in the archive. if yes, just open them
+		archdir=args[0] + "/" + args[1] + "/archive/" + args[2]
+		if not os.path.exists(archdir):
+			info("contest files don't exist. downloading...")
+			ctst = parsers[args[1]].parse(args[2], args[3])
+			ctst.setup(args[0] + "/" + args[1])
+		else:
+			info("contest files already exist. opening them")
+			for p in os.listdir(archdir):
+				solpath=archdir + "/" + p + "/" + p + ".cpp"
+				try: subprocess.call(["code", solpath])
+				except: err("failed to open the file in vscode from archive dir. path=" + solpath)
+
+class ContestArchiver():
+	def archive(self, root_path, platform, contestid):
+		shutil.move(root_path + '/' + platform + '/' + contestid, root_path + '/' + platform + '/archive/' + contestid)
 
 class Runner():
 	def run(self, args):
@@ -170,15 +192,17 @@ class Runner():
 			if f.startswith("in"):
 				tid = f.split(".")[1] if "." in f else ""
 				info("> {}./sol < {}{}".format(Colors.DIM, f, Colors.ENDC))
-				start=time()
-				out=check_output(["./sol"], cwd=base, stdin=open(base + "/" + f))
-				end=time()
+				start=time.time()
+				out=""
+				try:out=check_output(["./sol"], cwd=base, stdin=open(base + "/" + f))
+				except: pass #ignore
+				end=time.time()
 				jstatus=1
 				try: exp=open(base + "/out" + ("." + tid + ".txt" if tid != "" else "")).readlines()
 				except:
 					exp=["<no expected output>\n"]
 					jstatus=2
-				statuses=["FAIL", "SUCCESS", "NOT JUDGED"]
+				statuses=["FAILED", "SUCCESS", "NOT JUDGED"]
 				if jstatus != 2:
 					for tup in izip_longest(out.split("\n"), exp, fillvalue=''):
 						if tup[0].strip() != tup[1].strip():
@@ -200,5 +224,10 @@ class CPHelper():
 			ContestParser().parse(args[1:])
 		elif args[0] == "test":
 			Runner().run(args[1:])
+		elif args[0] == "archive":
+			ContestArchiver().archive(args[1], args[2], args[3])
 
+# setup root_folder cf|ac contestid credentialfile
+# test file_dir_name file_name test|prod|debug
+# archive root_folder platform contestid
 CPHelper().doJob(sys.argv[1:])

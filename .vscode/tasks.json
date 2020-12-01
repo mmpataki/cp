@@ -47,6 +47,7 @@
             "presentation": {
                 "echo": false,
                 "showReuseMessage": false,
+                "focus": true
             }
         },
         {
@@ -60,6 +61,22 @@
                 "${input:platform}",
                 "${input:contestid}",
                 "/root/cred"
+            ],
+            "presentation": {
+                "echo": false,
+                "showReuseMessage": false,
+            }
+        },
+        {
+            "type": "shell",
+            "label": "cp_archive",
+            "command": "python2",
+            "args": [
+                "${workspaceFolder}/bin/cphelper.py",
+                "archive",
+                "${workspaceFolder}",
+                "${input:platform}",
+                "${input:contestid}"
             ],
             "presentation": {
                 "echo": false,
