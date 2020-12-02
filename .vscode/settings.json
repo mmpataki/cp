@@ -97,5 +97,6 @@
     "window.zoomLevel": 0,
     "terminal.integrated.fontSize": 16,
     "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true
+    "python.linting.enabled": true,
+    "workbench.editor.enablePreview": false
 }
