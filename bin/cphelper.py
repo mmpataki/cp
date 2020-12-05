@@ -1,14 +1,15 @@
 import os
 import sys
-import urllib2
 import urllib
 import shutil
 import subprocess
 import requests
+import datetime
 from subprocess import check_output
 from bs4 import BeautifulSoup
 from itertools import izip_longest
 import time
+import json
 
 class Problem():
 	def __init__(self, id, name, time=0, memory=0):
@@ -66,13 +67,19 @@ class CFParser():
 	def parse(self, contest_id, creds_file):
 		url="https://codeforces.com/contest/{}/problems".format(contest_id)
 		info("using url: " + url)
-		page=urllib2.urlopen(url)
+		req = urllib2.Request(url, None, {'User-Agent' : 'Mozilla/5.0'})
+		page=urllib2.urlopen(req)
 		soup=BeautifulSoup(page, features="html.parser")
 		#check for a countdown
-		cntdown=soup.find_all('div', attrs={'class': 'countdown'})
+		cntdown=soup.find_all('span', attrs={'class': 'countdown'})
 		if len(cntdown) != 0:
-			t=str(cntdown[0].string).split(":")
-			time.sleep(int(t[0]) * 60 * 60 + int(t[1]) * 60 + int(t[2]))
+			h,m,s=[int(i) for i in str(cntdown[0].string).split(":")]
+			t=h * 60 * 60 + m * 60 + s
+			while t > 0:
+				time.sleep(1)
+				t-=1
+				sys.stdout.write("\rCountdown: {:02}:{:02}:{:02}".format(t / (60 * 60), (t % (60 * 60)) / 60, t % 60))
+				sys.stdout.flush()
 		contest = Contest(contest_id, soup.find_all('div', attrs={'class': 'caption'})[0].string)
 		for prob in soup.find_all('div', attrs = {'class': 'problemindexholder'}):
 			problem = Problem(prob.get('problemindex'), prob.find_all('div', attrs={'class': 'title'})[0].string)
@@ -110,6 +117,48 @@ class ACParser():
 						problem.addTest(inp, part.find_all('pre')[0].string)
 		return contest
 
+class CCParser():
+	def parse(self, contest_id, creds_file):
+		url="https://www.codechef.com/api/contests/{}".format(contest_id)
+		req = urllib.Request(url, None, {'User-Agent' : 'Mozilla/5.0'})
+		resp=json.load(urllib.urlopen(req))
+		pabstract=[resp['problems'][p] for p in resp['problems']]
+		pabstract.sort(key=lambda k: int(k['successful_submissions']))
+		ctst=Contest(contest_id, resp['name'])
+		for p in pabstract:
+			problem=Problem(p['code'], p['name'])
+			if p['code'] not in resp['problems_data']:
+				url="https://www.codechef.com/api/contests/{}/problems/{}".format(contest_id, p['code'])
+				req = urllib2.Request(url, None, {'User-Agent' : 'Mozilla/5.0'})
+				resp['problems_data'][p['code']] = json.load(urllib2.urlopen(req))
+			print('PROBLEMS')
+			print(resp['problems_data'][p['code']])
+			pdesc=resp['problems_data'][p['code']]['body'].split("\r\n")
+			inp, out, lastLine, _input, _output=False, False, "", "", ""
+			for line in pdesc:
+				if line.startswith('```'):
+					if lastLine.startswith('### Example Input'):
+						inp=True
+					elif lastLine.startswith('### Example Output'):
+						out=True
+					else:
+						if inp:
+							_input+=line + "\n"
+						elif out:
+							_output+=line + "\n"
+						else:
+							if _input != "" and _output != "":
+								print("----input:")
+								print(_input)
+								print("----output:")
+								print(_output)
+								problem.addTest(_input, _output)
+							else:
+								_input=_output=""
+							inp=out=False
+				lastLine = line
+			ctst.addProblem(problem)
+
 # helper stuff
 class Colors:
     HEADER = '\033[95m'
@@ -141,7 +190,8 @@ def status(msg, res_and_msg, extra=""):
 # parser registry
 parsers={
 	"cf" : CFParser(),
-	"ac" : ACParser()
+	"ac" : ACParser(),
+	"cc" : CCParser()
 }
 
 class ContestParser():
@@ -150,7 +200,7 @@ class ContestParser():
 		# check if we have this contest in the archive. if yes, just open them
 		archdir=args[0] + "/" + args[1] + "/archive/" + args[2]
 		if not os.path.exists(archdir):
-			info("contest files don't exist. downloading...")
+			info("Downloading...")
 			ctst = parsers[args[1]].parse(args[2], args[3])
 			ctst.setup(args[0] + "/" + args[1])
 		else:
@@ -169,6 +219,8 @@ class Runner():
 		base = args[0]
 		file = args[1]
 		mode = args[2]
+		if os.path.exists(base + "/sol"):
+			os.remove(base + "/sol")
 		cmdline = ["g++", "-o", "sol", "-Wall"]
 		if mode == "prod":
 			cmdline.append("-DONLINE_JUDGE")
