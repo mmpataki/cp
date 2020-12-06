@@ -4,7 +4,7 @@
         {
             "type": "shell",
             "label": "cp_test",
-            "command": "python2",
+            "command": "python3",
             "args": [
                 "${workspaceFolder}/bin/cphelper.py",
                 "test",
@@ -20,7 +20,7 @@
         {
             "type": "shell",
             "label": "cp_prod",
-            "command": "python2",
+            "command": "python3",
             "args": [
                 "${workspaceFolder}/bin/cphelper.py",
                 "test",
@@ -36,7 +36,7 @@
         {
             "type": "shell",
             "label": "cp_custom",
-            "command": "python2",
+            "command": "python3",
             "args": [
                 "${workspaceFolder}/bin/cphelper.py",
                 "test",
@@ -53,14 +53,14 @@
         {
             "type": "shell",
             "label": "cp_setup",
-            "command": "python2",
+            "command": "python3",
             "args": [
                 "${workspaceFolder}/bin/cphelper.py",
                 "setup",
                 "${workspaceFolder}",
                 "${input:platform}",
                 "${input:contestid}",
-                "/root/cred"
+                "/home/mmp/cred"
             ],
             "presentation": {
                 "echo": false,
@@ -70,7 +70,7 @@
         {
             "type": "shell",
             "label": "cp_archive",
-            "command": "python2",
+            "command": "python3",
             "args": [
                 "${workspaceFolder}/bin/cphelper.py",
                 "archive",
@@ -81,6 +81,22 @@
             "presentation": {
                 "echo": false,
                 "showReuseMessage": false,
+            }
+        },
+        {
+            "type": "shell",
+            "label": "view_in",
+            "command": "python3",
+            "args": [
+                "${workspaceFolder}/bin/cphelper.py",
+                "viewin",
+                "${input:input_type}",
+                "${file}"
+            ],
+            "presentation": {
+                "echo": false,
+                "showReuseMessage": false,
+                "reveal": "never"
             }
         },
         {
@@ -108,9 +124,19 @@
             "type": "pickString",
             "options": [
                 "cf",
-                "ac"
+                "ac",
+                "cc"
             ],
             "description": "Judging platform (cf: codeforces, ac: atcoder)"
+        },
+        {
+            "id": "input_type",
+            "type": "pickString",
+            "options": [
+                "graph-mat",
+                "graph-adj"
+            ],
+            "description": "Input type of this file"
         }
     ]
 }

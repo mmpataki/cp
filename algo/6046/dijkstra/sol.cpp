@@ -18,40 +18,65 @@ typedef long long int ll;
 #define PA(a,s,l)
 #endif
 
-vector<int> topoSort(map<int, vector<pair<int, int>>> &G) {
-	vector<int> ret;
-	stack<int> stk;
-	for(auto v : G) {
-		stk.push(v.first);
-		if(v.second.size() == 0) {
-			ret.push_back(stk.top());
-			stk.pop();
-		}
-		for(auto adj: v.second) {
-
+/*
+DIJKSTRA(G, S, W, PRED):
+	d := [INF]
+	Q := G.V
+	while Q != NULL_SET:
+		u := Q.extract_min()
+		for (u, v) in G.E:
+			if d[v] > d[u] + W(u, v):
+				d[v] = d[u] + W(u, v)
+				PRED[v] = u
+*/
+const ll INF = LONG_LONG_MAX;
+void dijkstra(vector<vector<pair<int, ll>>> &G, int v, int s, ll *d, int *path) {
+	priority_queue<pair<ll, int>, vector<pair<ll, int>>, greater<pair<ll, int>>> Q;
+	Q.push(make_pair(0, s));
+	int visited[v];
+	memset(visited, 0, sizeof(visited));
+	d[s] = 0;
+	while(!Q.empty()) {
+		int u = Q.top().second;
+		Q.pop();
+		if(visited[u]++) continue;
+		for(auto uv : G[u]) {
+			ll dist = d[u] + uv.second;
+			if(dist < d[uv.first]) {
+				Q.push(make_pair(d[uv.first] = dist, uv.first));
+				path[uv.first] = u;
+			}
 		}
 	}
 }
 
-int main(int argc, char ** argv) {
-	
-	ios_base::sync_with_stdio(0);
-	cin.tie(0);
-	
-	int e;
-	cin >> e;
-	map<int, vector<pair<int, int>>> G;
-	for(int i=0; i<e; i++) {
-		int u, v, w;
-		cin >> u >> v >> w;
-		if(G.find(u) == G.end()) {
-			G[u] = {};
-		}
-		if(G.find(v) == G.end()) {
-			G[v] = {};
-		}
-		G[u].push_back({v, w});
+int main() {
+	int v, e;
+	cin >> v >> e;
+	vector<vector<pair<int, ll>>> G(v);
+	for(int i = 0; i < e; i++) {
+		int a, b, w;
+		cin >> a >> b >> w;
+		--a;
+		--b;
+		G[a].push_back(make_pair(b, w));
+		G[b].push_back(make_pair(a, w));
 	}
-
-	PC(topoSort(G));
+	ll ans[v];
+	int path[v];
+	memset(ans, 0x7f, sizeof(ans));
+	for(int i = 0; i < v; i++) path[i]=-1;
+	PA(ans, 0, v)
+	dijkstra(G, v, 0, ans, path);
+	if(path[v-1] == -1) {
+		cout << -1 << endl;
+	} else {
+		vector<int> p;
+		for(int i=v-1; i != -1; i=path[i]) {
+			p.push_back(i+1);
+		}
+		for(int i=p.size()-1; i>=0; i--) {
+			cout << p[i] << ' ';
+		}
+	}
 }
