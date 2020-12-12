@@ -139,4 +139,46 @@
             "description": "Input type of this file"
         }
     ]
+
+    /*
+    
+    keybindings, copy these to your user level key mappings
+    [
+        {
+            "key": "f9",
+            "command": "workbench.action.tasks.runTask",
+            "args": "cp_prod"
+        },
+        {
+            "key": "f8",
+            "command": "workbench.action.tasks.runTask",
+            "args": "cp_test"
+        },
+        {
+            "key": "f10",
+            "command": "workbench.action.tasks.runTask",
+            "args": "cp_custom"
+        },
+        {
+            "key": "ctrl+shift+n",
+            "command": "workbench.action.tasks.runTask",
+            "args": "cp_setup"
+        },
+        {
+            "key": "ctrl+shift+x",
+            "command": "workbench.action.tasks.runTask",
+            "args": "cp_archive"
+        },
+        {
+            "key": "ctrl+shift+m",
+            "command": "workbench.action.tasks.runTask",
+            "args": "opcp"
+        },
+        {
+            "key": "ctrl+shift+i",
+            "command": "workbench.action.tasks.runTask",
+            "args": "view_in"
+        }
+    ]
+    */
 }

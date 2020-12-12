@@ -1,0 +1,2 @@
+colorscheme kuroi
+set number

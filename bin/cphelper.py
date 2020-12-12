@@ -5,15 +5,17 @@ from bs4 import BeautifulSoup
 from itertools import zip_longest
 
 class Colors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = "\033[1m"
-    DIM = "\033[2m"
-    ITALIC = "\033[3m"
+	HEADER = '\033[95m'
+	OKBLUE = '\033[94m'
+	OKGREEN = '\033[92m'
+	WARNING = '\033[93m'
+	FAIL = '\033[91m'
+	ENDC = '\033[0m'
+	BOLD = "\033[1m"
+	DIM = "\033[2m"
+	ITALIC = "\033[3m"
+	TITLE_FRONT = "\033[1;4m"
+	TITLE_BCK = ""
 
 def doPrint(x, color=""):
 	print(color + x + Colors.ENDC)
@@ -21,6 +23,8 @@ def info(x):
 	doPrint(x.rstrip())
 def err(x):
 	doPrint(x.rstrip(), Colors.FAIL + Colors.BOLD)
+def title(x):
+	doPrint(x.rstrip(), Colors.TITLE_BCK + Colors.TITLE_FRONT + Colors.BOLD)
 def warn(x):
 	doPrint(x.rstrip(), Colors.WARNING + Colors.BOLD)
 def label(x):
@@ -29,11 +33,11 @@ def status(msg, res_and_msg, extra=""):
 	colors=[Colors.FAIL, Colors.OKGREEN, Colors.WARNING]
 	stdmsgs=["FAILED", "SUCCESS"]
 	color,tok=(colors[res_and_msg[0]],res_and_msg[1]) if type(res_and_msg) is tuple else (colors[res_and_msg], stdmsgs[res_and_msg])
-	doPrint(Colors.BOLD + msg + "... " + color + tok + Colors.HEADER + " " + extra + Colors.ENDC)
+	doPrint(Colors.BOLD + msg + color + tok + Colors.HEADER + " " + extra + Colors.ENDC)
 
 def doGet(url):
 	info(f'http: {url}')
-	return urlopen(Request(url, None, {'User-Agent' : 'Mozilla/5.0'}))
+	return urlopen(Request(url, None, {'User-Agent' : 'Mozilla/5.0 (Linux; U; Android 4.4.2; en-us; SCH-I535 Build/KOT49H)'}))
 
 class Problem():
 	def __init__(self, id, name, time=0, memory=0):
@@ -92,7 +96,7 @@ class CFParser():
 			while t > 0:
 				time.sleep(1)
 				t-=1
-				sys.stdout.write("\rCountdown: {:02}:{:02}:{:02}".format(t / (60 * 60), (t % (60 * 60)) / 60, t % 60))
+				sys.stdout.write("\rCountdown: {:02}:{:02}:{:02}".format(int(t / (60 * 60)), int((t % (60 * 60)) / 60), int(t % 60)))
 				sys.stdout.flush()
 			return CFParser().parse(contest_id, creds_file)
 		contest = Contest(contest_id, soup.find_all('div', attrs={'class': 'caption'})[0].string, str(soup))
@@ -196,6 +200,9 @@ class Runner():
 		base = args[0]
 		file = args[1]
 		mode = args[2]
+
+		title(f"Running tests on {base}")
+
 		if os.path.exists(base + "/sol"):
 			os.remove(base + "/sol")
 		cmdline = ["g++", "-o", "sol", "-Wall"]
@@ -209,7 +216,9 @@ class Runner():
 
 		info("> {}{}{}".format(Colors.DIM, ' '.join(cmdline), Colors.ENDC))
 		ret = subprocess.call(cmdline, cwd=base)
-		status("compilation", not ret)
+		status("compilation... ", not ret)
+		if ret != 0:
+			return
 
 		if mode == "custom":
 			info("{}> ./sol{}".format(Colors.DIM, Colors.ENDC))
@@ -219,33 +228,41 @@ class Runner():
 
 		for f in os.listdir(base):
 			if f.startswith("in"):
+
 				tid = f.split(".")[1] if "." in f else ""
-				info(f"> {Colors.DIM}./sol < {f}{Colors.ENDC}")
-				start=time.time()
-				out=""
-				try:out=str(subprocess.check_output(["./sol"], cwd=base, stdin=open(base + "/" + f), universal_newlines=True))
-				except: pass #ignore
-				end=time.time()
+				cmdline = f"./sol < {f} {'| tee last.out' if mode != 'prod' else '> last.out'}"
+				title(f"\nRunning test #{tid} {Colors.ENDC}{Colors.DIM}[{cmdline}]{Colors.ENDC}")
+				
+				# setup input and expected output
 				jstatus=1
 				try: exp=open(base + "/out" + (f".{tid}.txt" if tid != "" else "")).readlines()
 				except:
 					exp=["<no expected output>\n"]
 					jstatus=2
 				statuses=["FAILED", "SUCCESS", "NOT JUDGED"]
-				if jstatus != 2:
-					for tup in zip_longest(out.split("\n"), exp, fillvalue=''):
-						if tup[0].strip() != tup[1].strip():
-							jstatus = 0
-							break
-				status("testcase #" + tid, (jstatus, statuses[jstatus]), "({:.3f}s.)".format(end-start))
-				if jstatus == 0 or mode != "prod":
+				if mode != "prod":
 					label("input")
 					print(open(base + "/" + f).read())
 					label("expected:")
 					for l in exp:
 						sys.stdout.write(l)
 					label("\noutput:")
-					print(out)
+
+				# run the code with tee
+				start=time.time()
+				ret=subprocess.call(cmdline, cwd=base, shell=True)
+				end=time.time()
+				
+				# now do the diff (act.out will only have the stdout)
+				out = open(f"{base}/last.out").readlines()
+
+				if jstatus != 2:
+					for tup in zip_longest(out, exp, fillvalue=''):
+						if tup[0].strip() != tup[1].strip():
+							jstatus = 0
+							break
+				status(f"", (jstatus, statuses[jstatus]), "({:.3f}s.)".format(end-start))
+		print('\n')
 
 class MatGraphVisualizer():
 	def doStuff(self, args):
