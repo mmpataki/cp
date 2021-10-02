@@ -194,11 +194,13 @@ class ContestParser():
 			ctst.setup(args[0] + "/" + args[1])
 		else:
 			info("contest files already exist. opening them")
+			toopen = []
 			for p in os.listdir(archdir):
 				solpath=f"{archdir}/{p}/{p}.cpp"
 				if os.path.exists(solpath):
-					try: subprocess.call(["code", solpath])
+					try: toopen.append(solpath)
 					except: err(f"failed to open the file in vscode from archive dir. path={solpath}")
+			subprocess.call(["code"] + toopen)
 
 class ContestArchiver():
 	def run(self, args):
