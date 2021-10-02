@@ -52,9 +52,8 @@ class Problem():
 		except: return
 
 		# copy the template
-		solfile=f"{ppath}/{self.id}.cpp"
+		self.solfile=solfile=f"{ppath}/{self.id}.cpp"
 		shutil.copyfile(f"{baseDir}/../../template.cpp", solfile)
-		subprocess.call(["code", solfile])
 
 		# copy the input and output files
 		i = 0
@@ -80,9 +79,11 @@ class Contest():
 		os.makedirs(path)
 		with open(f"{path}/index.html", "w") as fp:
 			fp.write(self.html)
+		
 		for problem in self.problems:
 			problem.setup(path)
 			info(f"saved: [{problem.name}]")
+		subprocess.call(["code"] + list(map(lambda p: p.solfile, self.problems)))
 
 class CFParser():
 	def parse(self, contest_id, creds_file):
