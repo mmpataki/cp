@@ -91,7 +91,7 @@
                 "${workspaceFolder}/bin/cphelper.py",
                 "viewin",
                 "${input:input_type}",
-                "${file}"
+                "${selectedText}"
             ],
             "presentation": {
                 "echo": false,
@@ -134,7 +134,8 @@
             "type": "pickString",
             "options": [
                 "graph-mat",
-                "graph-adj"
+                "graph-adj",
+                "graph-adj-list"
             ],
             "description": "Input type of this file"
         }

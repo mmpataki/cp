@@ -178,9 +178,16 @@ class CCParser():
 class ContestParser():
 	# root_folder platform contestid
 	def run(self, args):
-		# check if we have this contest in the archive. if yes, just open them
-		archdir=f"{args[0]}/{args[1]}/archive/{args[2]}"
-		if not os.path.exists(archdir):
+		# check if we have this contest in the current set or archive. if yes, just open them
+		paths = [
+			f"{args[0]}/{args[1]}/archive/{args[2]}",
+			f"{args[0]}/{args[1]}/{args[2]}"
+		]
+		archdir = ''
+		for p in paths:
+			if os.path.exists(p):
+				archdir = p
+		if archdir == '':
 			info("Downloading...")
 			ctst = parsers[args[1]].parse(args[2], args[3])
 			ctst.setup(args[0] + "/" + args[1])
@@ -188,8 +195,9 @@ class ContestParser():
 			info("contest files already exist. opening them")
 			for p in os.listdir(archdir):
 				solpath=f"{archdir}/{p}/{p}.cpp"
-				try: subprocess.call(["code", solpath])
-				except: err(f"failed to open the file in vscode from archive dir. path={solpath}")
+				if os.path.exists(solpath):
+					try: subprocess.call(["code", solpath])
+					except: err(f"failed to open the file in vscode from archive dir. path={solpath}")
 
 class ContestArchiver():
 	def run(self, args):
@@ -230,7 +238,7 @@ class Runner():
 			if f.startswith("in"):
 
 				tid = f.split(".")[1] if "." in f else ""
-				cmdline = f"./sol < {f} {'| tee last.out' if mode != 'prod' else '> last.out'}"
+				cmdline = f"./sol < {f} {'2> last.err | tee last.out' if mode != 'prod' else '> last.out'}"
 				title(f"\nRunning test #{tid} {Colors.ENDC}{Colors.DIM}[{cmdline}]{Colors.ENDC}")
 				
 				# setup input and expected output
@@ -261,14 +269,17 @@ class Runner():
 						if tup[0].strip() != tup[1].strip():
 							jstatus = 0
 							break
+				
+				label('debug info: ')
+				if mode != "prod":
+					err = open(f"{base}/last.err").readlines()
+					for l in err: print(l.strip())
 				status(f"", (jstatus, statuses[jstatus]), "({:.3f}s.)".format(end-start))
 		print('\n')
 
 class MatGraphVisualizer():
 	def doStuff(self, args):
-		fp=open(args[0])
-		fp.read()
-		matrix=[[int(i) for i in line.split(' ')] for line in fp.readlines()]
+		matrix=[[int(i) for i in line.split(' ')] for line in args[0].splitlines()]
 		data=""
 		for r in range(len(matrix)):
 			for c in range(len(matrix[r])):
@@ -285,17 +296,32 @@ def writeTempData(ifile, data):
 
 class AdjGraphVisualizer():
 	def doStuff(self, args):
-		lines=open(args[0]).readlines()
+		lines=args[0].splitlines()
 		data=""
 		data+=("digraph {\n")
 		for i in range(len(lines)):
-			edge=lines[i]
+			edge=lines[i].strip()
 			chu=[int(i) for i in edge.split(' ')]
 			data+=(f"{chu[0]} -> {chu[1]} [label=\"{chu[2] if len(chu) > 2 else ''}\"]\n")
 		data+=("}\n")
 		subprocess.call(['code', writeTempData(args[0], data)])
 
-visualizers = { "graph-mat" : MatGraphVisualizer(), "graph-adj": AdjGraphVisualizer() }
+class AdjListGraphVisualizer():
+	def doStuff(self, args):
+		lines=args[0].splitlines()
+		data=""
+		data+=("digraph {\n")
+		for i in range(len(lines)):
+			edge=lines[i].strip()
+			data+='\n'.join([f"{i+1} -> {v}\n" for v in edge.split(' ')[1:]])
+		data+=("}\n")
+		subprocess.call(['code', writeTempData(args[0], data)])
+
+visualizers = {
+	"graph-mat" : MatGraphVisualizer(), 
+	"graph-adj": AdjGraphVisualizer(),
+	"graph-adj-list": AdjListGraphVisualizer()
+}
 
 class InputVisualizer():
 	def run(self, args):

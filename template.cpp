@@ -18,13 +18,6 @@ typedef long long int ll;
 #define PA(a,s,l)
 #endif
 
-#define rep(i, s, e) for(int i=s; i<e; i++)
-#define reps(i, s, e, stp) for(int i=s; i<e; i+=stp)
-#define per(i, s, e) for(int i=e; i>=0; i--)
-#define pers(i, s, e, stp) for(int i=e; i>=0; i+=stp)
-#define F(i, n) for(int i=0; i<n; i++)
-#define R(i, n) for(int i=n-1; i>=0; i--)
-
 int main() {
 	
 	ios_base::sync_with_stdio(0);
