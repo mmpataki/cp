@@ -243,7 +243,7 @@ class PythonRunner():
 		return ["echo", ""]
 	
 	def getRunCommand(self, base, file, mode):
-		return ["python3", "./sol"]
+		return ["python3", file]
 
 class Runner():
 	def run(self, args):
