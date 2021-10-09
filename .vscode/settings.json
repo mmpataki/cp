@@ -697,7 +697,7 @@
     */
     "editor.glyphMargin": false,
     "editor.fontFamily": "'Cascadia mono'",
-    "editor.fontWeight": 300,
+    
     "files.associations": {
         "iostream": "cpp",
         "random": "cpp",

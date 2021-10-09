@@ -60,7 +60,8 @@
                 "${workspaceFolder}",
                 "${input:platform}",
                 "${input:contestid}",
-                "/home/mmp/cred"
+                "/home/mmp/cred",
+                "${input:lang}"
             ],
             "presentation": {
                 "echo": false,
@@ -130,6 +131,25 @@
             "description": "Judging platform (cf: codeforces, ac: atcoder)"
         },
         {
+            "id": "lang",
+            "type": "pickString",
+            "options": [
+                {
+                    "label": "Kotlin",
+                    "value": "kt"
+                },
+                {
+                    "label": "Python",
+                    "value": "py"
+                },
+                {
+                    "label": "C++",
+                    "value": "cpp"
+                }
+            ],
+            "description": "Programming Language"
+        },
+        {
             "id": "input_type",
             "type": "pickString",
             "options": [
@@ -140,7 +160,6 @@
             "description": "Input type of this file"
         }
     ]
-
     /*
     
     keybindings, copy these to your user level key mappings

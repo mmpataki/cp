@@ -46,14 +46,14 @@ class Problem():
 	def addTest(self, inp, out):
 		self.tests.append([str(inp).strip(), str(out).strip()])
 
-	def setup(self, baseDir):
+	def setup(self, baseDir, lang):
 		ppath = baseDir + "/" + self.id
 		try: os.makedirs(ppath)
 		except: return
 
 		# copy the template
-		self.solfile=solfile=f"{ppath}/{self.id}.cpp"
-		shutil.copyfile(f"{baseDir}/../../template.cpp", solfile)
+		self.solfile = f"{ppath}/{self.id}.{lang}"
+		shutil.copyfile(f"{baseDir}/../../template.{lang}", self.solfile)
 
 		# copy the input and output files
 		i = 0
@@ -74,14 +74,14 @@ class Contest():
 		self.problems.append(problem)
 		info(f"found: [{problem.name}]")
 	
-	def setup(self, baseDir):
+	def setup(self, baseDir, lang):
 		path=f"{baseDir}/{self.id}"
 		os.makedirs(path)
 		with open(f"{path}/index.html", "w") as fp:
 			fp.write(self.html)
 		
 		for problem in self.problems:
-			problem.setup(path)
+			problem.setup(path, lang)
 			info(f"saved: [{problem.name}]")
 		subprocess.call(["code"] + list(map(lambda p: p.solfile, self.problems)))
 
@@ -177,13 +177,14 @@ class CCParser():
 		return ctst
 
 class ContestParser():
-	# root_folder platform contestid
+	# root_folder platform contestid lang
 	def run(self, args):
 		# check if we have this contest in the current set or archive. if yes, just open them
 		paths = [
 			f"{args[0]}/{args[1]}/archive/{args[2]}",
 			f"{args[0]}/{args[1]}/{args[2]}"
 		]
+		lang = args[4]
 		archdir = ''
 		for p in paths:
 			if os.path.exists(p):
@@ -191,31 +192,25 @@ class ContestParser():
 		if archdir == '':
 			info("Downloading...")
 			ctst = parsers[args[1]].parse(args[2], args[3])
-			ctst.setup(args[0] + "/" + args[1])
+			ctst.setup(args[0] + "/" + args[1], lang)
 		else:
 			info("contest files already exist. opening them")
 			toopen = []
 			for p in os.listdir(archdir):
-				solpath=f"{archdir}/{p}/{p}.cpp"
-				if os.path.exists(solpath):
-					try: toopen.append(solpath)
-					except: err(f"failed to open the file in vscode from archive dir. path={solpath}")
-			subprocess.call(["code"] + toopen)
+				if os.path.isdir(f"{archdir}/{p}"):
+					toopen.append(f"{archdir}/{p}/{p}.*")
+			subprocess.call(f"code {' '.join(toopen)}", shell=True)
 
 class ContestArchiver():
 	def run(self, args):
 		shutil.move(f"{args[0]}/{args[1]}/{args[2]}", f"{args[0]}/{args[1]}/archive/{args[2]}")
 
-class Runner():
-	def run(self, args):
-		base = args[0]
-		file = args[1]
-		mode = args[2]
-
-		title(f"Running tests on {base}")
-
+class CPPRunner():
+	def init(self, base):
 		if os.path.exists(base + "/sol"):
 			os.remove(base + "/sol")
+	
+	def getCompileCommand(self, base, file, mode):
 		cmdline = ["g++", "-o", "sol", "-Wall"]
 		if mode == "prod":
 			cmdline.append("-DONLINE_JUDGE")
@@ -224,24 +219,65 @@ class Runner():
 			cmdline.append("-g")
 			cmdline.append("-fsanitize=address")
 		cmdline.append(file)
+		return cmdline
+	
+	def getRunCommand(self, base, file, mode):
+		return ["./sol"]
 
-		info("> {}{}{}".format(Colors.DIM, ' '.join(cmdline), Colors.ENDC))
-		ret = subprocess.call(cmdline, cwd=base)
+class KotlinRunner():
+	def init(self, base):
+		if os.path.exists(base + "/sol.jar"):
+			os.remove(base + "/sol.jar")
+	
+	def getCompileCommand(self, base, file, mode):
+		return ["/home/mmp/kotlin/kotlinc/bin/kotlinc", file, "-include-runtime", "-d", "sol.jar"]
+	
+	def getRunCommand(self, base, file, mode):
+		return ["java", "-jar", "./sol.jar"]
+
+class PythonRunner():
+	def init(self, base):
+		pass
+	
+	def getCompileCommand(self, base, file, mode):
+		return ["echo", ""]
+	
+	def getRunCommand(self, base, file, mode):
+		return ["python3", "./sol"]
+
+class Runner():
+	def run(self, args):
+		base = args[0]
+		file = args[1]
+		mode = args[2]
+		fn, ext = os.path.splitext(file)
+		if ext == '':
+			err("File names with no extensions can't be run")
+			return
+		runner = langPlugs[ext[1:]]['runner']()
+
+		title(f"Running tests on {base}")
+		runner.init(base)
+		compileCommand = runner.getCompileCommand(base, file, mode)
+		runCommand = runner.getRunCommand(base, file, mode)
+
+		info("> {}{}{}".format(Colors.DIM, ' '.join(compileCommand), Colors.ENDC))
+		ret = subprocess.call(compileCommand, cwd=base)
 		status("compilation... ", not ret)
 		if ret != 0:
 			return
 
 		if mode == "custom":
-			info("{}> ./sol{}".format(Colors.DIM, Colors.ENDC))
+			info("{}> {' '.join(runCommand)}{}".format(Colors.DIM, Colors.ENDC))
 			warn("Waiting for input:")
-			subprocess.call(["./sol"], cwd=base)
+			subprocess.call(runCommand, cwd=base)
 			return
 
 		for f in os.listdir(base):
 			if f.startswith("in"):
 
 				tid = f.split(".")[1] if "." in f else ""
-				cmdline = f"./sol < {f} {'2> last.err | tee last.out' if mode != 'prod' else '> last.out'}"
+				cmdline = f"{' '.join(runCommand)} < {f} {'2> last.err | tee last.out' if mode != 'prod' else '> last.out'}"
 				title(f"\nRunning test #{tid} {Colors.ENDC}{Colors.DIM}[{cmdline}]{Colors.ENDC}")
 				
 				# setup input and expected output
@@ -273,10 +309,11 @@ class Runner():
 							jstatus = 0
 							break
 				
-				label('debug info: ')
 				if mode != "prod":
 					err = open(f"{base}/last.err").readlines()
-					for l in err: print(l.strip())
+					if err:
+						label('debug info: ')
+						for l in err: print(l.strip())
 				status(f"", (jstatus, statuses[jstatus]), "({:.3f}s.)".format(end-start))
 		print('\n')
 
@@ -324,6 +361,18 @@ visualizers = {
 	"graph-mat" : MatGraphVisualizer(), 
 	"graph-adj": AdjGraphVisualizer(),
 	"graph-adj-list": AdjListGraphVisualizer()
+}
+
+langPlugs = {
+	'kt': {
+		'runner': KotlinRunner
+	},
+	'cpp': {
+		'runner': CPPRunner,
+	},
+	'py': {
+		'runner': PythonRunner
+	}
 }
 
 class InputVisualizer():
